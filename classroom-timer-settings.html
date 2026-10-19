@@ -505,6 +505,27 @@ function finishSession(session, interrupted = true, now = Date.now()) {
     let remaining = view.total;
     session.records = session.plan.phases.map((p,i) => { const planned = phaseDuration(session.plan,i), actual = Math.min(remaining, planned); remaining -= actual; return { actual, status: actual >= planned ? 'done' : actual > 0 ? 'partial' : 'unstarted' }; });
   }
+  if (session.mode === 'simulation' && !interrupted) applySimulationToPlan(session);
+}
+// 模拟授课完整结束后：把本次实际运行用时（分钟化）自动写回课程的时长设置并持久化
+function applySimulationToPlan(session) {
+  if (!session.records.length || session.plan.phases.length !== plan.phases.length) return;
+  const mins = session.plan.phases.map((_, i) => {
+    const r = session.records[i];
+    const ms = r && r.actual > 0 ? r.actual : phaseDuration(session.plan, i);
+    return Math.max(1, Math.round(ms / 60000));
+  });
+  plan.phases.forEach((p, i) => { p.minutes = mins[i]; delete p.durationMs; });
+  plan.target = mins.reduce((n, m) => n + m, 0);
+  plan.recordedTiming = false; plan.custom = true; dirty = true;
+  const current = courseId && courses.find(c => c.id === courseId);
+  if (current) {
+    const entry = { ...current, plan: clone(plan), updated: Date.now() };
+    const next = courses.map(c => c.id === current.id ? entry : c);
+    if (write('courses', next)) { courses = next; dirty = false; }
+  }
+  saveDraft();
+  toast(current ? '已按本次模拟用时更新该课程的时长设置' : '已按本次模拟用时更新当前时长设置');
 }
 function formatTime(ms) { const s = Math.floor(Math.abs(ms) / 1000); return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; }
 
@@ -603,7 +624,7 @@ function renderSetup() {
   if(setupScreen==='library') content=libraryHTML();
   else if(setupScreen==='choose') content=`<div class="choose-layout home-layout"><section class="home-question"><div class="eyebrow">START YOUR LESSON</div><h1>这节课，<br><em>多长时间？</em></h1><p class="lead">确定课时，再进入课程设置。</p><div class="home-target">${targetHTML()}<p class="target-note">40 分钟、45 分钟，或输入自定义课时。</p><p id="targetError" class="field-error"></p></div>${draft?'<p class="draft-hint">已保留上次安排，可继续设置或加载课程。</p>':''}</section><div class="home-library">${libraryHTML(true)}</div></div>`;
   else if(setupScreen==='edit') content=`<div class="course-settings-page"><div class="edit-layout"><section class="editor"><div class="course-name"><label for="courseName">课程名称</label><input id="courseName" maxlength="100" placeholder="为这节课取个名字…" value="${escape(plan.name)}"><span id="customBadge" class="badge"></span></div><div class="section-heading"><h2>课程设置 · 教学环节</h2><span class="muted">${plan.phases.length} 个环节</span></div><div class="row-head"><span>序</span><span>环节名称</span><span>计划时长</span><span style="text-align:right">调整顺序</span></div><div id="phaseRows">${rowsHTML()}</div><div class="editor-bottom"><button class="add-button" data-action="add">＋ 添加环节</button></div><div id="validation" class="field-error" aria-live="polite"></div></section><aside class="summary"><div class="section-heading"><h3>课时分配</h3><span class="badge" id="savedBadge"></span></div>${planStats()}<p class="inline-note">名称与时长可直接编辑。<br>使用 ↑ ↓ 调整顺序。<br>所有教学环节在本页集中编辑。</p>${saveButtons()}<p class="storage-note">修改自动保留为本机草稿。</p></aside></div>${templatesHTML()}</div>`;
-  else content=`<div class="ready-layout"><section class="ready-intro"><div class="eyebrow">READY FOR YOUR LESSON</div><h1>准备好了，<br><em>开始这一课。</em></h1><p class="ready-name">${escape(plan.name||'我的课堂练习')}</p>${planStats()}${saveButtons()}</section><section class="mode-panel"><h2>选择本次使用方式</h2><button class="mode-choice ${mode==='practice'?'selected':''}" data-action="mode" data-value="practice"><span class="mode-dot"></span><span><strong>磨课练习 <em class="mode-tag">手动</em></strong><small>环节提前结束，也可手动进入下一环节<br>自动记录每个环节最终用时，可直接用于模拟授课</small></span><b>↗</b></button><button class="mode-choice ${mode==='simulation'?'selected':''}" data-action="mode" data-value="simulation"><span class="mode-dot"></span><span><strong>模拟授课 <em class="mode-tag auto">自动</em></strong><small>到达计划时长，自动进入下一环节<br>全课到点自动结束，不记录教学完成速度</small></span><b>↗</b></button><p class="inline-note mode-selection-note">${mode==='practice'?'提前结束或超时均记录实际用时；到点会询问是否继续。全部完成后可直接按实测时间模拟。':'本次由系统按计划推进；最后一个环节到点自动完成。'}</p><button class="primary" id="startButton" data-action="start">开始${mode==='practice'?'磨课练习':'模拟授课'} ↗</button></section></div>`;
+  else content=`<div class="ready-layout"><section class="ready-intro"><div class="eyebrow">READY FOR YOUR LESSON</div><h1>准备好了，<br><em>开始这一课。</em></h1><p class="ready-name">${escape(plan.name||'我的课堂练习')}</p>${planStats()}${saveButtons()}</section><section class="mode-panel"><h2>选择本次使用方式</h2><button class="mode-choice ${mode==='practice'?'selected':''}" data-action="mode" data-value="practice"><span class="mode-dot"></span><span><strong>磨课练习 <em class="mode-tag">手动</em></strong><small>环节提前结束，也可手动进入下一环节<br>自动记录每个环节最终用时，可直接用于模拟授课</small></span><b>↗</b></button><button class="mode-choice ${mode==='simulation'?'selected':''}" data-action="mode" data-value="simulation"><span class="mode-dot"></span><span><strong>模拟授课 <em class="mode-tag auto">自动</em></strong><small>到达计划时长，自动进入下一环节<br>全课到点自动结束，不记录教学完成速度</small></span><b>↗</b></button><p class="inline-note mode-selection-note">${mode==='practice'?'提前结束或超时均记录实际用时；到点会询问是否继续。全部完成后可直接按实测时间模拟。':'本次由系统按计划推进；最后一个环节到点自动完成。完整结束后，本次运行用时将自动保存为课程时长设置。'}</p><button class="primary" id="startButton" data-action="start">开始${mode==='practice'?'磨课练习':'模拟授课'} ↗</button></section></div>`;
   const bottom=setupScreen==='library'?'':`<div class="screen-bottom"><span class="muted" id="setupFooterHint">${setupScreen==='choose'?`当前目标 ${Number.isFinite(plan.target)?plan.target:'—'} 分钟`:setupScreen==='edit'?'环节合计与目标一致后，即可继续。':'每一次练习，都更接近理想的课堂。'}</span><div>${setupScreen!=='choose'?`<button class="soft-button" data-action="screen" data-value="${setupScreen==='ready'?'edit':'choose'}">← 上一步</button>`:''}${setupScreen!=='ready'?`<button class="primary" id="continueButton" data-action="screen" data-value="${setupScreen==='choose'?'edit':'ready'}">${setupScreen==='choose'?'确认课时，设置课程':'设置完成，选择模式'} →</button>`:''}</div></div>`;
   app.innerHTML=`${setupNav()}<div class="setup-screen ${setupScreen}-screen">${content}</div>${bottom}`;
   updateSetup(); $('#courseCount').textContent=courses.length;
