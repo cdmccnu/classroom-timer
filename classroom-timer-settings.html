@@ -207,6 +207,208 @@ body[data-paused="true"] .policy-icon{animation-play-state:paused}
 .result-icon{position:relative;animation:finish-pop .5s ease-out both}
 .result-icon:after{content:'';position:absolute;inset:-12px;border:2px dotted #a3b68d;border-radius:50%;pointer-events:none;animation:finish-spark .9s ease-out both}
 @media(prefers-reduced-motion:reduce){.setup-screen,.timer-layout,.result-panel,.mode-dot,.policy-icon,.result-icon,.result-icon:after{animation:none!important}body[data-view="timer"] #phaseProgress>.progress-fill:after{display:none}button,.progress-fill{transition:none!important}}
+
+/* ==== 手机端竖屏优化（追加覆盖，不改变功能） ==== */
+@media (max-width:760px) and (orientation:portrait){
+  /* 解锁整页滚动：内容自然增高，不再压缩进一屏 */
+  html{height:auto;overflow:auto}
+  body{height:auto;min-height:100dvh;overflow:auto}
+  body:before{opacity:.5}
+  .setup-screen{flex:1 0 auto;min-height:0}
+  main{padding:14px 14px 20px;gap:14px}
+
+  /* 通用字体与触控目标 */
+  button{touch-action:manipulation}
+  input{font-size:16px}
+  .soft-button,.icon-button,.primary,.danger-button{min-height:44px}
+  .inline-note{font-size:11px;line-height:1.7}
+  #toast{font-size:13px}
+
+  /* 顶栏 */
+  .topbar{height:auto;min-height:58px;flex-basis:auto;padding:8px 16px}
+  .brand{font-size:20px;letter-spacing:2px}
+  .brandmark{font-size:30px}
+  .brand small{font-size:9px}
+  .topbar .icon-button{font-size:13px;padding:9px 13px}
+
+  /* 步骤条：可横向滑动，字号放大 */
+  .step-nav{flex:0 0 auto;justify-content:flex-start;gap:6px;overflow-x:auto;padding:4px 2px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .step-nav::-webkit-scrollbar{display:none}
+  .step-nav button{font-size:13px;padding:10px 14px;gap:6px;min-height:42px;flex:0 0 auto}
+  .step-nav button span{font-size:11px}
+
+  /* 底部操作条：吸底、大按钮 */
+  .screen-bottom{flex:0 0 auto;position:sticky;bottom:0;z-index:20;align-items:center;background:rgba(245,244,239,.96);backdrop-filter:blur(8px);border-radius:14px 14px 0 0;padding:10px 4px calc(10px + env(safe-area-inset-bottom));gap:10px;box-shadow:0 -4px 18px rgba(40,60,50,.06)}
+  .screen-bottom>.muted{font-size:11px;max-width:none;flex:1;line-height:1.6}
+  .screen-bottom>div{display:flex;gap:8px;flex:0 0 auto}
+  .screen-bottom .primary,.screen-bottom .soft-button{font-size:14px;min-height:48px;padding:12px 16px}
+
+  /* ===== 首页：选课时长 ===== */
+  .home-layout{display:flex;flex-direction:column;gap:14px;height:auto}
+  .home-question{display:block;position:static;padding:20px 18px}
+  .home-question .eyebrow{font-size:10px}
+  .home-question h1{width:auto;max-width:none;font-size:29px;line-height:1.45;margin:10px 0 8px}
+  .home-question .lead{max-width:none;font-size:13px;line-height:1.8}
+  .home-question .draft-hint{font-size:11px;margin-top:8px}
+  .home-target{position:static;margin:16px 0 0}
+  .home-target .target-options,.target-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+  .home-target .target-choice,.target-choice{flex:none;min-height:66px;font-size:14px;padding:10px 4px;white-space:normal;line-height:1.3}
+  .home-target .target-choice strong,.target-choice strong{display:block;font-size:24px;margin-bottom:2px}
+  .home-target .target-note,.target-note{font-size:12px;line-height:1.7;margin-top:10px}
+
+  /* 首页：我的课程 */
+  .home-library .library{padding:18px 16px;border-radius:16px;gap:12px}
+  .home-library .library-title h2{font-size:17px}
+  .home-library .library-title .soft-button{min-height:40px;font-size:12px}
+  .home-library .library-items{display:flex;flex-direction:column;gap:10px;grid-template-rows:none}
+  .home-library .saved-card{padding:16px;gap:10px}
+  .home-library .saved-card h3{font-size:15px}
+  .home-library .saved-card p{font-size:12px;line-height:1.7}
+  .home-library .saved-tools{max-width:none;flex-direction:row;gap:8px}
+  .home-library .saved-tools button{flex:1;min-height:40px;font-size:13px;padding:8px}
+  .home-library .empty-library{font-size:13px;line-height:2}
+  .home-library .inline-note{font-size:11px}
+  .home-library .pager .soft-button{min-height:40px;font-size:13px;padding:8px 16px}
+  .home-library .pager span{font-size:11px}
+
+  /* ===== 课程设置页 ===== */
+  .course-settings-page{gap:14px}
+  .course-settings-page .edit-layout{display:flex;flex-direction:column;gap:14px;grid-template-rows:none}
+  .course-settings-page .editor{padding:18px 16px;border-radius:16px}
+  .course-settings-page .editor .section-heading h2{font-size:15px}
+  .course-settings-page .course-name{padding-bottom:12px;margin-bottom:12px}
+  .course-settings-page .course-name input{min-height:48px;font-size:16px}
+  .course-settings-page .course-name label{font-size:13px}
+  .course-settings-page .row-head{font-size:10px}
+  .course-settings-page #phaseRows{flex:0 0 auto;overflow:visible;padding-right:0}
+  .course-settings-page .phase-row{grid-template-columns:22px minmax(0,1fr) 72px 102px;gap:6px;padding:8px 0}
+  .course-settings-page .phase-row input{min-height:46px;font-size:16px;padding:8px 10px}
+  .course-settings-page .minutes span{font-size:12px}
+  .course-settings-page .row-actions{gap:3px}
+  .course-settings-page .row-actions button{min-width:32px;min-height:42px;font-size:14px;padding:6px 4px}
+  .course-settings-page .field-error{font-size:11px}
+  .course-settings-page .editor-bottom{min-height:0;padding-top:10px}
+  .course-settings-page .editor-bottom .add-button{min-height:48px;font-size:14px;padding:12px}
+  .course-settings-page .pager .soft-button{min-height:42px;font-size:13px;padding:8px 14px}
+  .course-settings-page .pager span{font-size:11px}
+
+  /* 四个小模板：2×2 网格，文字可读 */
+  .compact-template-section{flex-basis:auto}
+  .compact-template-section>.section-heading{margin-bottom:8px}
+  .compact-template-section>.section-heading>h3{font-size:13px}
+  .compact-template-section .muted{font-size:11px}
+  .course-settings-page .compact-templates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));height:auto;gap:10px}
+  .course-settings-page .compact-templates .template,.course-settings-page .compact-templates .template.selected{padding:14px 12px;border-radius:12px;min-height:0}
+  .course-settings-page .compact-templates .number{font-size:24px}
+  .course-settings-page .compact-templates .number small{font-size:11px;margin-left:2px}
+  .course-settings-page .compact-templates .check{width:18px;height:18px;font-size:11px;right:8px;top:10px}
+  .course-settings-page .compact-templates h3{font-size:13px;margin-bottom:4px;white-space:normal}
+  .course-settings-page .compact-templates p{font-size:11px;line-height:1.5;white-space:normal}
+
+  /* 侧栏汇总：改为普通文档流卡片 */
+  .course-settings-page .summary{position:static;padding:18px 16px;border-radius:16px}
+  .course-settings-page .summary h3{font-size:14px}
+  .course-settings-page .summary #savedBadge{font-size:10px}
+  .course-settings-page .summary .inline-note{font-size:12px;line-height:1.8}
+  .course-settings-page .summary .storage-note{display:block;font-size:10px}
+  .course-settings-page .summary-stats{margin:12px 0 8px}
+  .course-settings-page .summary-stat strong{font-size:28px}
+  .course-settings-page .summary-stat span,.course-settings-page .summary-stat small{font-size:11px}
+  .course-settings-page .summary .balance{font-size:12px;line-height:1.7;padding:8px 0}
+  .course-settings-page .summary .save-actions{position:static;right:auto;top:auto;width:auto;flex-direction:row;gap:10px;margin-top:12px}
+  .course-settings-page .save-actions button{flex:1;min-height:46px;font-size:14px;padding:10px}
+
+  /* ===== 模式选择页 ===== */
+  .ready-layout{grid-template-columns:1fr;grid-template-rows:none;gap:16px;height:auto;align-items:stretch}
+  .ready-intro{position:relative;max-width:none;padding:20px 18px}
+  .ready-intro .summary-stats,.ready-intro .mini-timeline,.ready-intro .balance,.ready-intro .save-actions{position:static;left:auto;right:auto;top:auto;margin-top:10px}
+  .ready-intro .summary-stats{gap:16px}
+  .ready-intro .balance{font-size:12px;line-height:1.7;padding:0}
+  .ready-intro .save-actions{display:flex;gap:10px}
+  .ready-intro .save-actions button{flex:1;min-height:44px;font-size:13px}
+  .ready-intro h1{font-size:26px;line-height:1.5}
+  .ready-intro .ready-name{font-size:14px;white-space:normal}
+  .ready-intro .summary-stat strong{font-size:24px}
+  .ready-layout .mode-panel h2{font-size:16px;margin-bottom:6px}
+  .ready-layout .mode-choice,.mode-choice{min-height:78px;padding:16px 14px;gap:12px;align-items:flex-start;margin:10px 0}
+  .ready-layout .mode-choice strong,.mode-choice strong{font-size:16px}
+  .ready-layout .mode-choice small,.mode-choice small{font-size:12px;line-height:1.7}
+  .ready-layout .mode-choice>b,.mode-choice>b{font-size:11px}
+  .ready-layout .mode-panel>.inline-note{font-size:11px;line-height:1.7}
+  .ready-layout .mode-panel>.primary{width:100%;min-height:54px;font-size:16px;margin-top:10px}
+  .replay-preview{padding:16px 14px}
+  .replay-preview .summary-stat strong{font-size:22px}
+  .replay-phases span{font-size:12px}
+  .replay-preview>.soft-button{min-height:44px;font-size:13px;width:100%;margin-top:10px}
+
+  /* ===== 磨课计时 / 模拟授课 ===== */
+  .timer-top h1{font-size:20px;max-width:none;white-space:normal}
+  .timer-top .muted{font-size:12px}
+  .timer-tools .soft-button{min-height:42px;font-size:13px}
+  .timer-layout{grid-template-columns:1fr;gap:14px}
+  .timer-layout .timer-card{padding:22px 18px;border-radius:18px;overflow:visible;justify-content:flex-start}
+  .timer-layout .timer-card .current-name{font-size:clamp(30px,9vw,42px);letter-spacing:1px;line-height:1.3;white-space:normal;overflow:visible;text-overflow:unset;margin:14px 0 10px}
+  .timer-layout .mode-policy{padding:12px 14px;gap:10px;border-radius:12px}
+  .timer-layout .mode-policy strong{font-size:13px}
+  .timer-layout .mode-policy p{font-size:11px;line-height:1.6}
+  .timer-kicker{font-size:12px}
+  .status-pill{font-size:11px;padding:4px 10px}
+  .timer-layout .current-sub-row .current-sub{font-size:13px;line-height:1.6}
+  .timer-layout .current-sub-row .adjust-time,.adjust-time{font-size:12px;min-height:38px;padding:8px 12px}
+  .progress-note{font-size:11px}
+  .time-windows{gap:8px;margin-top:12px}
+  .time-windows>div{padding:10px 6px}
+  .time-windows span{font-size:11px}
+  .time-windows strong{font-size:20px}
+  .full-label{font-size:13px}
+  .timer-layout .next-preview{font-size:12px;padding:12px 14px;line-height:1.7}
+  .timer-controls{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+  .timer-controls button{font-size:15px;min-height:52px;padding:12px 14px}
+  .timer-controls #nextButton{flex:1 1 100%;order:-1;min-height:58px;font-size:17px}
+  .timer-controls .soft-button,.timer-controls .danger-button{flex:1 1 0}
+  .sound-toggle{font-size:13px;margin-top:14px;min-height:44px}
+  .sound-toggle input{width:20px;height:20px}
+  .session-note{font-size:11px;line-height:1.7}
+  .timer-layout .phase-sidebar{max-height:none;padding:8px 0;justify-content:flex-start}
+  .timer-layout .phase-sidebar h3{font-size:13px;margin-bottom:6px}
+  .timer-layout #sessionPhases{overflow:visible}
+  .timer-layout .session-phase{position:static;min-height:0;padding:12px;gap:10px;align-items:center}
+  .timer-layout .session-phase b{width:22px;font-size:13px}
+  .timer-layout .session-phase strong{font-size:14px;max-width:none;white-space:normal}
+  .timer-layout .session-phase small{font-size:11px}
+  .timer-layout .session-phase .phase-state{position:static;font-size:11px}
+  .timer-layout .session-phase .adjust-time{display:inline-block;font-size:11px;min-height:34px;padding:6px 10px;margin:2px 0 0}
+  .paused-banner{font-size:13px;padding:12px 14px;line-height:1.7}
+  .paused-banner b{font-size:14px}
+
+  /* ===== 结果复盘页 ===== */
+  .result-hero h1{font-size:26px}
+  .result-hero p{font-size:13px;line-height:1.8}
+  .result-panel{padding:20px 16px;border-radius:16px}
+  .result-totals strong{font-size:22px}
+  .result-totals small{font-size:11px}
+  .result-table{font-size:12px}
+  .result-table th,.result-table td{padding:9px 6px}
+  .result-table small{font-size:10px}
+  .result-explanation{font-size:12px;line-height:1.8}
+  .result-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px}
+  .result-actions button{width:100%;min-height:48px;font-size:13px;padding:12px 8px}
+  .result-actions button.primary{grid-column:1/-1;min-height:52px;font-size:15px}
+  .result-panel>.pager .soft-button{min-height:42px;font-size:13px}
+  .storage-note{font-size:10px}
+
+  /* 弹窗 */
+  dialog{padding:22px 20px;width:calc(100vw - 28px)}
+  dialog h2{font-size:18px}
+  dialog p{font-size:13px;line-height:1.8}
+  dialog input{min-height:48px;font-size:16px}
+  dialog .dialog-actions{gap:10px}
+  dialog .dialog-actions button{flex:1;min-height:46px;font-size:14px}
+
+  /* 页脚 */
+  footer{height:auto;flex-basis:auto;padding:14px 16px calc(14px + env(safe-area-inset-bottom));font-size:9px;justify-content:center;gap:12px}
+}
+
 </style>
 </head>
 <body data-entry="settings" data-home="classroom-timer-demo.html" data-settings="classroom-timer-settings.html">
