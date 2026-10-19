@@ -214,8 +214,9 @@ body[data-paused="true"] .policy-icon{animation-play-state:paused}
   html{height:auto;overflow:auto}
   body{height:auto;min-height:100dvh;overflow:auto}
   body:before{opacity:.5}
-  .setup-screen{flex:1 0 auto;min-height:0}
-  main{padding:14px 14px 20px;gap:14px}
+  .setup-screen{flex:1 0 auto;min-height:0;display:block}
+  .setup-screen>*{width:100%;box-sizing:border-box}
+  main{padding:14px 14px 100px;gap:14px}
 
   /* 通用字体与触控目标 */
   button{touch-action:manipulation}
@@ -237,8 +238,8 @@ body[data-paused="true"] .policy-icon{animation-play-state:paused}
   .step-nav button{font-size:13px;padding:10px 14px;gap:6px;min-height:42px;flex:0 0 auto}
   .step-nav button span{font-size:11px}
 
-  /* 底部操作条：吸底、大按钮 */
-  .screen-bottom{flex:0 0 auto;position:sticky;bottom:0;z-index:20;align-items:center;background:rgba(245,244,239,.96);backdrop-filter:blur(8px);border-radius:14px 14px 0 0;padding:10px 4px calc(10px + env(safe-area-inset-bottom));gap:10px;box-shadow:0 -4px 18px rgba(40,60,50,.06)}
+  /* 底部操作条：位于内容末尾（不吸底，避免遮挡），大按钮 */
+  .screen-bottom{flex:0 0 auto;position:static;align-items:center;background:rgba(245,244,239,.96);border-radius:14px;padding:10px 8px calc(10px + env(safe-area-inset-bottom));gap:10px;border:1px solid var(--line)}
   .screen-bottom>.muted{font-size:11px;max-width:none;flex:1;line-height:1.6}
   .screen-bottom>div{display:flex;gap:8px;flex:0 0 auto}
   .screen-bottom .primary,.screen-bottom .soft-button{font-size:14px;min-height:48px;padding:12px 16px}
@@ -272,7 +273,8 @@ body[data-paused="true"] .policy-icon{animation-play-state:paused}
   .home-library .pager span{font-size:11px}
 
   /* ===== 课程设置页 ===== */
-  .course-settings-page{gap:14px}
+  .course-settings-page{display:block;min-height:0;gap:14px}
+  .course-settings-page>.edit-layout{flex:none}
   .course-settings-page .edit-layout{display:flex;flex-direction:column;gap:14px;grid-template-rows:none}
   .course-settings-page .editor{padding:18px 16px;border-radius:16px}
   .course-settings-page .editor .section-heading h2{font-size:15px}
@@ -293,7 +295,7 @@ body[data-paused="true"] .policy-icon{animation-play-state:paused}
   .course-settings-page .pager span{font-size:11px}
 
   /* 四个小模板：2×2 网格，文字可读 */
-  .compact-template-section{flex-basis:auto}
+  .compact-template-section{flex:none;flex-basis:auto;margin-top:14px}
   .compact-template-section>.section-heading{margin-bottom:8px}
   .compact-template-section>.section-heading>h3{font-size:13px}
   .compact-template-section .muted{font-size:11px}
@@ -526,7 +528,7 @@ let page = 'setup', libraryOpen = false, session = null, sound = read('sound', f
 let toastTimeout, lastPersist = 0, sounded = new Set();
 let dialogBusy=false, practicePromptBusy=false;
 let setupScreen = document.body.dataset.entry==='settings'?(handoff?.screen==='ready'?'ready':'edit'):'choose', phasePage = 0, libraryPage = 0, resultPage = 0;
-const pageSize = () => page==='setup'&&setupScreen==='edit' ? (window.innerWidth<=760?(window.innerHeight<780?1:2):window.innerHeight<900?2:window.innerHeight<1100?3:4) : window.innerWidth <= 760 ? 2 : window.innerHeight < 650 ? 3 : 4;
+const pageSize = () => page==='setup'&&setupScreen==='edit' ? 99 : window.innerWidth <= 760 ? 2 : window.innerHeight < 650 ? 3 : 4;
 function pager(current, total, action) { return `<div class="pager"><button class="soft-button" data-action="${action}" data-value="${current-1}" ${current === 0 ? 'disabled' : ''}>←</button><span>${current+1} / ${Math.max(1,total)}</span><button class="soft-button" data-action="${action}" data-value="${current+1}" ${current >= total-1 ? 'disabled' : ''}>→</button></div>`; }
 function toast(message) { $('#toast').textContent = message; $('#toast').classList.add('visible'); clearTimeout(toastTimeout); toastTimeout = setTimeout(() => $('#toast').classList.remove('visible'), 3600); }
 function saveDraft() { write('draft', { plan, courseId, dirty, mode, simulationReplay }); }
@@ -719,7 +721,7 @@ function endToResult() { write('session', session); releaseWake(); page = 'resul
 function deltaLabel(actual, planned) { const diff = actual - planned; return Math.abs(diff) < 1000 ? '与计划一致' : `${diff > 0 ? '超时' : '提前'} ${formatTime(diff)}`; }
 function renderResult() {
   page = 'result'; document.body.dataset.view='result'; resultPage=Math.min(resultPage,Math.max(0,Math.ceil(session.plan.phases.length/pageSize())-1)); const p = session.plan, practice = session.mode === 'practice';
-  app.innerHTML = `<div class="result-hero"><div class="result-icon">${session.interrupted ? '◷' : '✓'}</div><div class="eyebrow" style="justify-content:center">${practice ? 'LESSON REFLECTION / 课堂复盘' : 'SIMULATION COMPLETE / 模拟记录'}</div><h1>${session.interrupted ? '本次练习已提前结束' : practice ? '一次练习，一点新的从容。' : '模拟授课完成'}</h1><p>${escape(p.name || '我的课堂练习')} · ${p.recordedTiming?'实测安排 '+formatTime(planDuration(p)):p.target+' 分钟安排'}<br>${practice ? '看见时间的分配，也看见下一次可以调整的地方。' : '以下记录反映预设节奏的运行情况，不代表真实教学完成用时。'}</p></div><section class="result-panel"><div class="result-totals"><div><small>原计划总用时</small><strong>${formatTime(planDuration(p))}</strong></div><div><small>${practice ? '实际有效用时' : '模拟已运行'}</small><strong>${formatTime(session.base)}</strong></div><div><small>${session.interrupted ? '完成状态' : practice ? '与计划比较' : '完成状态'}</small><strong style="font-size:20px;line-height:1.9">${session.interrupted ? '提前中止' : practice ? deltaLabel(session.base, planDuration(p)) : '按计划完成'}</strong></div></div><table class="result-table"><thead><tr><th>教学环节</th><th>计划</th><th>${practice ? '实际' : '已运行'}</th><th>${practice ? '与计划比较' : '运行状态'}</th></tr></thead><tbody>${p.phases.slice(resultPage*pageSize(),(resultPage+1)*pageSize()).map((phase, offset) => { const i=resultPage*pageSize()+offset; const r = session.records[i], diff = r.actual - phaseDuration(p,i); return `<tr><td>${escape(phase.name)}${r.status !== 'done' ? `<small>${r.status === 'partial' ? '未完成 · 提前结束' : '未开始'}</small>` : ''}</td><td>${formatTime(phaseDuration(p,i))}${session.practiceLimits&&session.practiceLimits[i]!==phase.minutes?`<small>本轮设定 ${session.practiceLimits[i]} 分钟</small>`:''}</td><td>${r.status === 'unstarted' ? '—' : formatTime(r.actual)}</td><td class="${practice && r.status === 'done' ? diff >= 1000 ? 'over' : diff <= -1000 ? 'under' : '' : ''}">${practice ? r.status === 'unstarted' ? '未开始' : r.status === 'partial' ? '未完成' : deltaLabel(r.actual, phaseDuration(p,i)) : r.status === 'done' ? '已运行完成' : r.status === 'partial' ? '已中止' : '未开始'}</td></tr>`; }).join('')}</tbody></table>${pager(resultPage,Math.ceil(p.phases.length/pageSize()),'result-page')}<p class="result-explanation">${practice ? '实际用时可直接用于模拟授课；仅在你主动选择后启用，不会覆盖保存的计划。' : '模拟记录反映预设节奏。选择磨课练习，可记录真实教学用时。'}暂停时间已排除，用时按分:秒显示。</p><div class="result-actions"><button class="soft-button" data-action="return-home">← 回到首页</button><button class="soft-button" data-action="edit">返回编辑</button><button class="soft-button" data-action="save">${courseId ? '更新该课程安排' : '保存课程安排'}</button>${courseId ? '<button class="soft-button" data-action="save-as">另存为新课程</button>' : ''}${practice&&!session.interrupted?'<button class="primary" data-action="simulate-actual">用本轮实际用时模拟 →</button><button class="soft-button" data-action="choose-simulation">按设定时长模拟</button>':''}<button class="${practice&&!session.interrupted?'soft-button':'primary'}" data-action="again">再练一次 ↗</button></div><p class="storage-note">保存的始终是计划安排。每次重新开始都会清空本轮计时记录。</p></section>`;
+  app.innerHTML = `<div class="result-hero"><div class="result-icon">${session.interrupted ? '◷' : '✓'}</div><div class="eyebrow" style="justify-content:center">${practice ? 'LESSON REFLECTION / 课堂复盘' : 'SIMULATION COMPLETE / 模拟记录'}</div><h1>${session.interrupted ? '本次练习已提前结束' : practice ? '一次练习，一点新的从容。' : '模拟授课完成'}</h1><p>${escape(p.name || '我的课堂练习')} · ${p.recordedTiming?'实测安排 '+formatTime(planDuration(p)):p.target+' 分钟安排'}<br>${practice ? '看见时间的分配，也看见下一次可以调整的地方。' : '以下记录反映预设节奏的运行情况，不代表真实教学完成用时。'}</p></div><section class="result-panel"><div class="result-totals"><div><small>原计划总用时</small><strong>${formatTime(planDuration(p))}</strong></div><div><small>${practice ? '实际有效用时' : '模拟已运行'}</small><strong>${formatTime(session.base)}</strong></div><div><small>${session.interrupted ? '完成状态' : practice ? '与计划比较' : '完成状态'}</small><strong style="font-size:20px;line-height:1.9">${session.interrupted ? '提前中止' : practice ? deltaLabel(session.base, planDuration(p)) : '按计划完成'}</strong></div></div><table class="result-table"><thead><tr><th>教学环节</th><th>计划</th><th>${practice ? '实际' : '已运行'}</th><th>${practice ? '与计划比较' : '运行状态'}</th></tr></thead><tbody>${p.phases.map((phase, offset) => { const i=offset; const r = session.records[i], diff = r.actual - phaseDuration(p,i); return `<tr><td>${escape(phase.name)}${r.status !== 'done' ? `<small>${r.status === 'partial' ? '未完成 · 提前结束' : '未开始'}</small>` : ''}</td><td>${formatTime(phaseDuration(p,i))}${session.practiceLimits&&session.practiceLimits[i]!==phase.minutes?`<small>本轮设定 ${session.practiceLimits[i]} 分钟</small>`:''}</td><td>${r.status === 'unstarted' ? '—' : formatTime(r.actual)}</td><td class="${practice && r.status === 'done' ? diff >= 1000 ? 'over' : diff <= -1000 ? 'under' : '' : ''}">${practice ? r.status === 'unstarted' ? '未开始' : r.status === 'partial' ? '未完成' : deltaLabel(r.actual, phaseDuration(p,i)) : r.status === 'done' ? '已运行完成' : r.status === 'partial' ? '已中止' : '未开始'}</td></tr>`; }).join('')}</tbody></table><p class="result-explanation">${practice ? '实际用时可直接用于模拟授课；仅在你主动选择后启用，不会覆盖保存的计划。' : '模拟记录反映预设节奏。选择磨课练习，可记录真实教学用时。'}暂停时间已排除，用时按分:秒显示。</p><div class="result-actions"><button class="soft-button" data-action="return-home">← 回到首页</button><button class="soft-button" data-action="edit">返回编辑</button><button class="soft-button" data-action="save">${courseId ? '更新该课程安排' : '保存课程安排'}</button>${courseId ? '<button class="soft-button" data-action="save-as">另存为新课程</button>' : ''}${practice&&!session.interrupted?'<button class="primary" data-action="simulate-actual">用本轮实际用时模拟 →</button><button class="soft-button" data-action="choose-simulation">按设定时长模拟</button>':''}<button class="${practice&&!session.interrupted?'soft-button':'primary'}" data-action="again">再练一次 ↗</button></div><p class="storage-note">保存的始终是计划安排。每次重新开始都会清空本轮计时记录。</p></section>`;
 }
 function begin() { if (errors(plan).length) return; initAudio(); session = startSession(mode==='simulation'&&simulationReplay?simulationReplay:plan,mode); sounded = new Set(); write('session',session); renderTimer(); requestWake(); window.scrollTo(0,0); }
 app.addEventListener('input', event => {
